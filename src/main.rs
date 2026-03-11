@@ -180,37 +180,44 @@ async fn main() -> Result<()> {
     let profile_json = serde_json::to_string_pretty(&profile)?;
     let pk_doc_json = serde_json::to_string_pretty(&pk_doc)?;
 
-    let mut tarchive_client = tarchive::tarchive_client::TarchiveClient::connect("http://localhost:18887").await
+    let mut tarchive_client = tarchive::tarchive_service_client::TarchiveServiceClient::connect("http://localhost:18887").await
         .map_err(|_| anyhow!("Error: Failed to persist AntID\nCause: Could not connect to AntTP gRPC API at localhost:18887.\nSuggestion: Ensure the AntTP service is running and accessible."))?;
 
-    let tarchive_request = tonic::Request::new(tarchive::CreateRequest {
+    let tarchive_request = tonic::Request::new(tarchive::CreateTarchiveRequest {
         files: vec![
             tarchive::File {
-                path: "profile.jsonld".to_string(),
+                name: "profile.jsonld".to_string(),
                 content: profile_json.as_bytes().to_vec(),
             },
             tarchive::File {
-                path: format!("keys/blsttc/{}/public-key.json", now.format("%Y-%m-%d")),
+                name: format!("keys/blsttc/{}/public-key.json", now.format("%Y-%m-%d")),
                 content: pk_doc_json.as_bytes().to_vec(),
             },
         ],
-        store_type: args.store_type.clone(),
+        path: None,
+        store_type: Some(args.store_type.clone()),
     });
 
-    let tarchive_response = tarchive_client.create(tarchive_request).await
+    let tarchive_response = tarchive_client.create_tarchive(tarchive_request).await
         .map_err(|e| anyhow!("Error: Failed to create tarchive\nCause: {}\nSuggestion: Check AntTP logs.", e))?;
     
-    let tarchive_address = tarchive_response.into_inner().address;
+    let tarchive_address = tarchive_response.into_inner().address.ok_or_else(|| anyhow!("Error: Failed to create tarchive\nCause: Server returned empty address."))?;
 
-    let mut pnr_client = pnr::pnr_client::PnrClient::connect("http://localhost:18887").await
+    let mut pnr_client = pnr::pnr_service_client::PnrServiceClient::connect("http://localhost:18887").await
         .map_err(|_| anyhow!("Error: Failed to register PNR\nCause: Could not connect to AntTP gRPC API at localhost:18887.\nSuggestion: Ensure the AntTP service is running and accessible."))?;
 
-    let pnr_request = tonic::Request::new(pnr::RegisterRequest {
-        name: pnr_name,
-        address: tarchive_address.clone(),
+    let pnr_request = tonic::Request::new(pnr::CreatePnrRequest {
+        pnr_zone: Some(pnr::PnrZone {
+            name: pnr_name,
+            records: HashMap::new(),
+            resolver_address: None,
+            personal_address: Some(tarchive_address.clone()),
+        }),
+        store_type: Some(args.store_type.clone()),
+        is_immutable: true,
     });
 
-    pnr_client.register(pnr_request).await
+    pnr_client.create_pnr(pnr_request).await
         .map_err(|e| anyhow!("Error: Failed to register PNR\nCause: {}\nSuggestion: Check AntTP logs.", e))?;
 
     println!("AntID generated successfully!");

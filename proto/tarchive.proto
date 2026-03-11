@@ -2,20 +2,72 @@ syntax = "proto3";
 
 package tarchive;
 
-service Tarchive {
-    rpc Create (CreateRequest) returns (CreateResponse);
-}
-
-message CreateRequest {
-    repeated File files = 1;
-    string store_type = 2; // e.g. "disk" or "network"
+service TarchiveService {
+  rpc CreateTarchive(CreateTarchiveRequest) returns (TarchiveResponse);
+  rpc UpdateTarchive(UpdateTarchiveRequest) returns (TarchiveResponse);
+  rpc TruncateTarchive(TruncateTarchiveRequest) returns (TarchiveResponse);
+  rpc ListTarchive(ListTarchiveRequest) returns (ListTarchiveResponse);
+  rpc GetTarchive(GetTarchiveRequest) returns (GetTarchiveResponse);
+  rpc PushTarchive(PushTarchiveRequest) returns (TarchiveResponse);
 }
 
 message File {
-    string path = 1;
-    bytes content = 2;
+  string name = 1;
+  bytes content = 2;
 }
 
-message CreateResponse {
-    string address = 1;
+message CreateTarchiveRequest {
+  repeated File files = 1;
+  optional string path = 2;
+  optional string store_type = 3;
+}
+
+message UpdateTarchiveRequest {
+  string address = 1;
+  repeated File files = 2;
+  optional string path = 3;
+  optional string store_type = 4;
+}
+
+message TruncateTarchiveRequest {
+  string address = 1;
+  string path = 2;
+  optional string store_type = 3;
+}
+
+message TarchiveResponse {
+  optional string address = 1;
+}
+
+message GetTarchiveRequest {
+  string address = 1;
+  optional string path = 2;
+}
+
+message GetTarchiveResponse {
+  optional string address = 1;
+  optional bytes content = 2;
+  repeated Item items = 3;
+}
+
+message ListTarchiveRequest {
+  string address = 1;
+  optional string path = 2;
+}
+
+message ListTarchiveResponse {
+  string address = 1;
+  repeated Item items = 2;
+}
+
+message PushTarchiveRequest {
+  string address = 1;
+  optional string store_type = 2;
+}
+
+message Item {
+  string name = 1;
+  uint64 modified = 2;
+  uint64 size = 3;
+  string type = 4;
 }
