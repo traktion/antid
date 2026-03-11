@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package pnr;
+
+service PNR {
+    rpc Register (RegisterRequest) returns (RegisterResponse);
+}
+
+message RegisterRequest {
+    string name = 1;
+    string address = 2; // e.g. the tarchive address
+}
+
+message RegisterResponse {
+    bool success = 1;
+}

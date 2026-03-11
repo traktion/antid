@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package archive;
+
+service Archive {
+    rpc Store (StoreRequest) returns (StoreResponse);
+}
+
+message StoreRequest {
+    bytes data = 1;
+    string store_type = 2; // e.g. "disk" or "network"
+}
+
+message StoreResponse {
+    string address = 1;
+}

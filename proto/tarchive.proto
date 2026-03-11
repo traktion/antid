@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package tarchive;
+
+service Tarchive {
+    rpc Create (CreateRequest) returns (CreateResponse);
+}
+
+message CreateRequest {
+    repeated File files = 1;
+    string store_type = 2; // e.g. "disk" or "network"
+}
+
+message File {
+    string path = 1;
+    bytes content = 2;
+}
+
+message CreateResponse {
+    string address = 1;
+}
