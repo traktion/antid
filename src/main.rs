@@ -220,12 +220,19 @@ async fn main() -> Result<()> {
     let mut pnr_client = pnr::pnr_service_client::PnrServiceClient::connect("http://localhost:18887").await
         .map_err(|_| anyhow!("Error: Failed to register PNR\nCause: Could not connect to AntTP gRPC API at localhost:18887.\nSuggestion: Ensure the AntTP service is running and accessible."))?;
 
+    let mut records = HashMap::new();
+    records.insert("".to_string(), pnr::PnrRecord {
+        address: tarchive_address.clone(),
+        record_type: pnr::PnrRecordType::A.into(),
+        ttl: 3600,
+    });
+
     let pnr_request = tonic::Request::new(pnr::CreatePnrRequest {
         pnr_zone: Some(pnr::PnrZone {
             name: pnr_name,
-            records: HashMap::new(),
+            records,
             resolver_address: None,
-            personal_address: Some(tarchive_address.clone()),
+            personal_address: None,
         }),
         store_type: Some(args.store_type.clone()),
         is_immutable: true,
