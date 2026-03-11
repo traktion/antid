@@ -35,44 +35,9 @@ Example URL: `https://joeblogs/profile.jsonld`
 }
 ```
 
-
 ---
 
-### 2) Key Document (immutable single `blsttc` public key)
-Example URL: `https://joeblogs/keys/blsttc/2026-02-28/public-key.json`
-
-```json
-{
-  "type": "blsttc-public-key",
-  "format": "blsttc",
-  "curve": "BLS12-381",
-  "encoding": "base64",
-  "publicKey": "[BASE64_ENCODED_KEY_BYTES]",
-  "created": "2026-02-28T00:00:00Z",
-  "id": "https://joeblogs/keys/blsttc/2026-02-28/public-key.json",
-  "fingerprints": {
-    "sha256": "[hex_sha256_of_canonical_key_bytes]"
-  }
-}
-```
-
-
----
-
-### 3) Optional: “latest” pointer document (mutable convenience link)
-Example URL: `https://joeblogs/keys/blsttc/latest.json`
-
-```json
-{
-  "type": "blsttc-public-key-pointer",
-  "latest": "https://joeblogs/keys/blsttc/2026-02-28/public-key.json"
-}
-```
-
-
----
-
-### 4) Optional: Profile Document variant without direct email/phone
+### 2) Optional: Profile Document variant without direct email/phone
 If you prefer less scrapeable contact info, keep the profile but omit `email` and `telephone`:
 
 ```textmate
