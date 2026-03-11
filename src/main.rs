@@ -183,25 +183,39 @@ async fn main() -> Result<()> {
     let mut tarchive_client = tarchive::tarchive_service_client::TarchiveServiceClient::connect("http://localhost:18887").await
         .map_err(|_| anyhow!("Error: Failed to persist AntID\nCause: Could not connect to AntTP gRPC API at localhost:18887.\nSuggestion: Ensure the AntTP service is running and accessible."))?;
 
-    let tarchive_request = tonic::Request::new(tarchive::CreateTarchiveRequest {
+    let tarchive_request_root = tonic::Request::new(tarchive::CreateTarchiveRequest {
         files: vec![
             tarchive::File {
                 name: "profile.jsonld".to_string(),
                 content: profile_json.as_bytes().to_vec(),
-            },
-            tarchive::File {
-                name: format!("keys/blsttc/{}/public-key.json", now.format("%Y-%m-%d")),
-                content: pk_doc_json.as_bytes().to_vec(),
             },
         ],
         path: None,
         store_type: Some(args.store_type.clone()),
     });
 
-    let tarchive_response = tarchive_client.create_tarchive(tarchive_request).await
-        .map_err(|e| anyhow!("Error: Failed to create tarchive\nCause: {}\nSuggestion: Check AntTP logs.", e))?;
+    let tarchive_response_root = tarchive_client.create_tarchive(tarchive_request_root).await
+        .map_err(|e| anyhow!("Error: Failed to create tarchive (root)\nCause: {}\nSuggestion: Check AntTP logs.", e))?;
     
-    let tarchive_address = tarchive_response.into_inner().address.ok_or_else(|| anyhow!("Error: Failed to create tarchive\nCause: Server returned empty address."))?;
+    let initial_address = tarchive_response_root.into_inner().address.ok_or_else(|| anyhow!("Error: Failed to create tarchive\nCause: Server returned empty address."))?;
+
+    let key_dir = format!("keys/blsttc/{}", now.format("%Y-%m-%d"));
+    let tarchive_request_keys = tonic::Request::new(tarchive::UpdateTarchiveRequest {
+        address: initial_address,
+        files: vec![
+            tarchive::File {
+                name: "public-key.json".to_string(),
+                content: pk_doc_json.as_bytes().to_vec(),
+            },
+        ],
+        path: Some(key_dir),
+        store_type: Some(args.store_type.clone()),
+    });
+
+    let tarchive_response_final = tarchive_client.update_tarchive(tarchive_request_keys).await
+        .map_err(|e| anyhow!("Error: Failed to update tarchive with keys\nCause: {}\nSuggestion: Check AntTP logs.", e))?;
+
+    let tarchive_address = tarchive_response_final.into_inner().address.ok_or_else(|| anyhow!("Error: Failed to update tarchive\nCause: Server returned empty address."))?;
 
     let mut pnr_client = pnr::pnr_service_client::PnrServiceClient::connect("http://localhost:18887").await
         .map_err(|_| anyhow!("Error: Failed to register PNR\nCause: Could not connect to AntTP gRPC API at localhost:18887.\nSuggestion: Ensure the AntTP service is running and accessible."))?;
