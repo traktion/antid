@@ -132,7 +132,7 @@ async fn main() -> Result<()> {
 
     let public_key = secret_key.public_key();
     let pk_bytes = public_key.to_bytes();
-    let pk_base64 = base64_encode(&pk_bytes);
+    let pk_hex = public_key.to_hex();
     let mut hasher = Sha256::new();
     hasher.update(&pk_bytes);
     let pk_fingerprint = hex::encode(hasher.finalize());
@@ -147,8 +147,8 @@ async fn main() -> Result<()> {
         type_: "blsttc-public-key".to_string(),
         format: "blsttc".to_string(),
         curve: "BLS12-381".to_string(),
-        encoding: "base64".to_string(),
-        public_key: pk_base64,
+        encoding: "hex".to_string(),
+        public_key: pk_hex,
         created: now.to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         id: key_doc_url.clone(),
         fingerprints: {
@@ -252,11 +252,6 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn base64_encode(bytes: &[u8]) -> String {
-    use base64::{engine::general_purpose, Engine as _};
-    general_purpose::STANDARD.encode(bytes)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -286,5 +281,18 @@ mod tests {
         let name = "  Joe   Blogs  ";
         let pnr = get_pnr_name(name);
         assert!(pnr.starts_with("joe-blogs-profile-"));
+    }
+    
+    #[test]
+    fn test_public_key_hex_encoding() {
+        let secret_key = SecretKey::random();
+        let public_key = secret_key.public_key();
+        let pk_hex = public_key.to_hex();
+        let pk_bytes = public_key.to_bytes();
+        
+        // Verify hex encoding
+        assert_eq!(pk_hex, hex::encode(pk_bytes));
+        // BLS12-381 G1 is 48 bytes (compressed), which is 96 hex characters
+        assert_eq!(pk_hex.len(), 96);
     }
 }
