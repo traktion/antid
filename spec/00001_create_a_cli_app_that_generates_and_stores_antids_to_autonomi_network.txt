@@ -1,0 +1,66 @@
+As a security conscious user
+I want to create an AntTP Identity Document (AntID) in JSON-LD and save it to the Autonomi network as part of a tarchive via AntTP
+So that I can link it to comments and messages I post on the network, allowing me to prove my identity
+
+Given the AntID CLI should be a fast and simple CLI application
+When building the foundation of the application
+Then use Rust as the programming language
+And use 'clap' to set command line parameters (using long names which match AntID fields)
+And use 'blsttc' for generating a new encryption key pair (based off a randomly generated key or a hex encoded private key provided by the user)
+And use 'json_serde' for serialising/deserialising json-ld
+And use the AntTP gRPC API to read/write the AntID to Autonomi as profile.jsonld in a tarchive (download proto definition here: https://github.com/traktion/AntTP/blob/master/proto/tarchive.proto and https://github.com/traktion/AntTP/blob/master/proto/archive.proto and save to /proto/)
+And assume that AntTP will be running on localhost, listening on gRPC port 18887
+
+Given each value in the AntID should be set via optional command line parameters
+When building a new AntID document
+Then map each command line parameter to the AntID document names and set the associated values
+And validate fields are in the correct format based on example 1 in EXAMPLES.md
+And return an error message to the CLI if invalid, with a suggestion of how to fix
+And do not include '@id' as this is auto-generated
+
+Given the AntID must be persisted to Autonomi Network
+When the AntID document has been built
+Then the AntID document must be stored as a file (profile.jsonld) in tarchive
+And a command line property to set store-type should also be used to define how the document is saved (see tarchive.proto)
+And the default store-type should be 'disk' (so that the document can be reviewed before it is published)
+
+Given the AntID will reference the public key in the identifier with propertyId 'blsttc:public-key'
+When the AntID document has been built
+Then the BLSTTC public key should be stored in a file 'keys/blsttc/2026-02-28/public-key.json' (where 2026-02-28 is the current date in YYYY-MM-DD format)
+And the content of public-key.json should adhere to the specification (5. Key Document Format (single-key, immutable))
+And the public-key.json should be also be stored in the tarchive
+
+Given the CLI should must also provide feedback to the user
+When the AntID is created successfully
+Then the CLI should echo the content to the terminal
+And echo the immutable address it is stored at (identified with 'Immutable Address' label)
+
+Given the CLI should must also provide feedback to the user
+When the AntID creation fails
+Then the CLI should echo that there has been a failure and provide a cause if known
+
+Given '@id' in the AntID should be a self referencing URL
+When setting the @id
+Then create an immutable PNR over gRPC (download https://github.com/traktion/AntTP/blob/master/proto/pnr.proto and save to /proto/)
+And use the 'name' with non-alphanumeric letters filter and spaces replaced with dashes ('-') followed by a dash and 'profile' followed by a dash and the current seconds since epoch (e.g. joe-blogs-profile-1773255652)
+And create a PNR zone with a single PNR record and default ("") record key
+And with an address of the AntID tarchive (the latest tarchive address, returned from the acceptance criteria above)
+And then this will resolve to http://joe-blogs-profile-1773255652
+And the profile.jsonId file will resolve to http://joe-blogs-profile-1773255652/profile.jsonId#me
+And assume that AntTP will be running on localhost, listening on gRPC port 18887
+And the default store-type should be 'disk' (so that the document can be reviewed before it is published)
+
+Implementation Notes
+
+- Place any unit tests at the bottom of the same file as the associated production code
+- Increment patch version of anttp package in Cargo.toml
+- Create a copy of this issue description and save to /spec using the name of this issue as the filename (with lower underscore case, starting with the 5 char padded issue number, e.g. 00001_issue_title.txt)
+- Update unit tests to validate the changes
+- Review SPECIFICATION.md and EXAMPLES.md in this repo to explain and provide samples of how to generate an AntTP Identity Document (AntID)
+
+Amendments
+
+Given the user should only need to supply a name
+When accepting CLI arguments
+Then allow URL to be optional
+

@@ -23,7 +23,7 @@ struct Args {
     name: String,
 
     #[arg(short, long)]
-    url: String,
+    url: Option<String>,
 
     #[arg(short, long)]
     email: Option<String>,
@@ -107,7 +107,9 @@ fn get_pnr_name(name: &str) -> String {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    validate_url(&args.url)?;
+    if let Some(ref url) = args.url {
+        validate_url(url)?;
+    }
     if let Some(ref email) = args.email {
         validate_email(email)?;
     }
@@ -161,7 +163,7 @@ async fn main() -> Result<()> {
         type_: "Person".to_string(),
         id: format!("{}#me", profile_url),
         name: args.name,
-        url: args.url,
+        url: args.url.unwrap_or_else(|| base_url.clone()),
         email: args.email.map(|e| format!("mailto:{}", e)),
         identifier: vec![
             PropertyValue {
@@ -277,5 +279,12 @@ mod tests {
         assert!(validate_url("https://example.com").is_ok());
         assert!(validate_url("http://example.com").is_ok());
         assert!(validate_url("ftp://example.com").is_err());
+    }
+
+    #[test]
+    fn test_get_pnr_name_with_spaces() {
+        let name = "  Joe   Blogs  ";
+        let pnr = get_pnr_name(name);
+        assert!(pnr.starts_with("joe-blogs-profile-"));
     }
 }
