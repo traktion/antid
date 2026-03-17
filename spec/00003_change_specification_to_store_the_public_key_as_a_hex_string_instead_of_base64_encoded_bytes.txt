@@ -1,0 +1,18 @@
+As an AntTP user
+I want AntIDs to store public keys in hex string format instead of base64 encoded byte strings
+So that I can follow the Autonomi and AntTP conventions of serialising public keys to hex strings
+
+Given SPECIFICATION.md specifies that base64 encoding is required
+When updating the documentation
+Then ensure the the specification is updated to use hex encoding
+
+Given the code in main.rs currently uses base64 encoding
+When updating the code to reflect the new hex encoding
+Then ensure public_key.to_hex() is used to create the hex strings
+
+Implementation Notes
+
+- Place any unit tests at the bottom of the same file as the associated production code
+- Increment patch version of anttp package in Cargo.toml
+- Create a copy of this issue description and save to /spec using the name of this issue as the filename (with lower underscore case, starting with the 5 char padded issue number, e.g. 00001_issue_title.txt)
+- Update unit tests to validate the changes

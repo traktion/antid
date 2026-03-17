@@ -59,7 +59,7 @@ A Key Document MUST include:
 - `type`: MUST be `"blsttc-public-key"`
 - `format`: MUST be `"blsttc"`
 - `curve`: the curve identifier (e.g., `"BLS12-381"`)
-- `encoding`: the encoding used for `publicKey` (this spec defines `"base64"`)
+- `encoding`: the encoding used for `publicKey` (this spec defines `"hex"`)
 - `publicKey`: the public key encoded according to `encoding`
 - `created`: an ISO 8601 timestamp indicating publication/creation time
 - `id`: the canonical URL of this Key Document (SHOULD equal the URL used to fetch it)
@@ -91,4 +91,4 @@ The publisher MUST define what byte representation is used as **Canonical Key By
 
 ### 9. Example Structures (non-normative)
 - Profile Document: Schema.org `Person` + `identifier[]` `PropertyValue` references for key URL and fingerprint.
-- Key Document: JSON object containing `publicKey` (base64), `curve`, `created`, `id`, and `fingerprints.sha256`.
+- Key Document: JSON object containing `publicKey` (hex), `curve`, `created`, `id`, and `fingerprints.sha256`.
